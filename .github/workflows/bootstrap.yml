@@ -1,0 +1,36 @@
+name: Bootstrap project
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set project variables
+        run: |
+          echo "PROJECT_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
+          echo "PROJECT_SLUG=${{ github.event.repository.name }}" >> $GITHUB_ENV
+          echo "PROJECT_OWNER=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
+
+      - name: Create .env from template
+        run: |
+          cp .env.example .env
+          sed -i "s/__PROJECT_NAME__/$PROJECT_NAME/g" .env
+
+      - name: Replace placeholders in files
+        run: |
+          find . -type f \( -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "CMakeLists.txt" \) \
+            -exec sed -i "s/__PROJECT_NAME__/$PROJECT_NAME/g" {} +
+
+      - name: Show result
+        run: |
+          echo "Project: $PROJECT_NAME"
+          cat .env
